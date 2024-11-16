@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 
 #define GNUB_MAX_CMD_PART_LENGHT 1024
@@ -40,6 +42,8 @@ void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const 
 int _gnub__execute_command(struct _gnub__cmd* cmd);
 void _gnub__free_command(struct _gnub__cmd* cmd);
 
+bool _gnub__compare_files(const char* file0, const char* file1);
+
 /* public functions */
 
 int gnub__execute_commands(struct gnub__cmd_arr* cmds);
@@ -49,6 +53,8 @@ void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const cha
 		const char* cppflags, const char* source, const char* output);
 void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
 		const char* output);
+
+bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
 
 #define _gnub__parts_command(x, arr, ...) ({ const char* __parts[] = {__VA_ARGS__}; \
 		x(arr, array_lenght(__parts), __parts); })
@@ -145,6 +151,32 @@ void _gnub__append_parts_by_index(struct gnub__cmd_arr* arr, const size_t count,
 	_gnub__append_to_command(cmd, count, parts);
 }
 
+bool _gnub__compare_files(const char* file0, const char* file1)
+{
+	FILE* file0_ds = fopen(file0, "rb");
+	FILE* file1_ds = fopen(file1, "rb");
+
+	char c0 = fgetc(file0_ds);
+	char c1 = fgetc(file1_ds);
+
+	bool is_eq = false;
+
+	while (c0 != EOF && c1 != EOF) {
+		if (c0 != c1) goto done;	
+	}
+
+	if (c0 == EOF && c1 == EOF) {
+		is_eq = true;
+		goto done;
+	}
+
+done:
+	fclose(file0_ds);
+	fclose(file1_ds);
+
+	return is_eq;
+}
+
 /* public functions */
 
 int gnub__execute_commands(struct gnub__cmd_arr* cmds)
@@ -180,6 +212,19 @@ void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* o
 		const char* output)
 {
 	gnub__append_command(arr, ld, ldflags, "-o", output, objects);
+}
+
+bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, char* argv[])
+{
+	if (strcmp(output_file, argv[0]) == 0) return false;
+	if (gnub__execute_commands(arr) != 0) return false;
+	if (_gnub__compare_files(output_file, argv[0])) return true;
+
+	remove(argv[0]);
+	rename(output_file, argv[0]);
+
+	execv(argv[0], argv);
+	exit(0);
 }
 
 #endif
