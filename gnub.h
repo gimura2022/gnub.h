@@ -51,6 +51,8 @@ void gnub__free_commands(struct gnub__cmd_arr* cmds);
 
 void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const char* cflags,
 		const char* cppflags, const char* source, const char* output);
+void gnub__compile_c(struct gnub__cmd_arr* arr, const char* cc, const char* cflags, const char* cppflags,
+		const char* ldflags, const char* source, const char* output);
 void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
 		const char* output);
 
@@ -206,6 +208,12 @@ void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const cha
 		const char* cppflags, const char* source, const char* output)
 {
 	gnub__append_command(arr, cc, cflags, cppflags, "-c", "-o", output, source);
+}
+
+void gnub__compile_c(struct gnub__cmd_arr* arr, const char* cc, const char* cflags, const char* cppflags,
+		const char* ldflags, const char* source, const char* output)
+{
+	gnub__append_command(arr, cc, cflags, cppflags, ldflags, "-o", output, source);
 }
 
 void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
