@@ -37,12 +37,12 @@ void _gnub__append_parts_to_last(struct gnub__cmd_arr* arr, const size_t count, 
 void _gnub__append_parts_by_index(struct gnub__cmd_arr* arr, const size_t count, const char** parts);
 void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const char** parts);
 
-void _gnub__execute_command(struct _gnub__cmd* cmd);
+int _gnub__execute_command(struct _gnub__cmd* cmd);
 void _gnub__free_command(struct _gnub__cmd* cmd);
 
 /* public functions */
 
-void gnub__execute_commands(struct gnub__cmd_arr* cmds);
+int gnub__execute_commands(struct gnub__cmd_arr* cmds);
 void gnub__free_commands(struct gnub__cmd_arr* cmds);
 
 void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const char* cflags,
@@ -100,7 +100,7 @@ void _gnub__append_command(struct gnub__cmd_arr* arr, const size_t count, const 
 	_gnub__append_to_command(arr->end, count, parts);
 }
 
-void _gnub__execute_command(struct _gnub__cmd* cmd)
+int _gnub__execute_command(struct _gnub__cmd* cmd)
 {
 	char out_command[GNUB_MAX_CMD_PART_LENGHT];
 	memset(out_command, '\0', sizeof(out_command));
@@ -113,7 +113,7 @@ void _gnub__execute_command(struct _gnub__cmd* cmd)
 		part = part->next;
 	}
 
-	system(out_command);
+	return system(out_command);
 }
 
 void _gnub__free_command(struct _gnub__cmd* cmd)
@@ -147,11 +147,15 @@ void _gnub__append_parts_by_index(struct gnub__cmd_arr* arr, const size_t count,
 
 /* public functions */
 
-void gnub__execute_commands(struct gnub__cmd_arr* cmds)
+int gnub__execute_commands(struct gnub__cmd_arr* cmds)
 {
 	struct _gnub__cmd* cmd = cmds->start;
 	while (cmd != NULL) {
-		_gnub__execute_command(cmd);	
+		int code = _gnub__execute_command(cmd);
+		if (code != 0) {
+			return code;
+		}
+
 		cmd = cmd->next;
 	}
 }
