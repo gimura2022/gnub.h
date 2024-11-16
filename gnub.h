@@ -82,7 +82,9 @@ void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const 
 		memcpy(cmd->end->str, parts[i], strlen(parts[i]));
 
 		cmd->end->next = (struct _gnub__cmd_part*) malloc(sizeof(struct _gnub__cmd_part));
-		cmd->end = cmd->end->next;
+		cmd->end       = cmd->end->next;
+		cmd->end->next = NULL;
+		memset(cmd->end->str, '\0', sizeof(cmd->end->str));
 	}
 }
 
@@ -93,17 +95,21 @@ void _gnub__append_command(struct gnub__cmd_arr* arr, const size_t count, const 
 	if (arr->start == NULL) {
 		is_first_cmd = true;
 
-		arr->start = (struct _gnub__cmd*) malloc(sizeof(struct _gnub__cmd));
-		arr->end   = arr->start;
+		arr->start     = (struct _gnub__cmd*) malloc(sizeof(struct _gnub__cmd));
+		arr->end       = arr->start;
+		arr->end->next = NULL;
 	}
 
 	if (!is_first_cmd) {
 		arr->end->next = (struct _gnub__cmd*) malloc(sizeof(struct _gnub__cmd));
 		arr->end       = arr->end->next;
+		arr->end->next = NULL;
 	}
 
-	arr->end->start = (struct _gnub__cmd_part*) malloc(sizeof(struct _gnub__cmd_part));
-	arr->end->end   = arr->end->start;
+	arr->end->start     = (struct _gnub__cmd_part*) malloc(sizeof(struct _gnub__cmd_part));
+	arr->end->end       = arr->end->start;
+	arr->end->end->next = NULL;
+	memset(arr->end->end->str, '\0', sizeof(arr->end->end->str));
 
 	_gnub__append_to_command(arr->end, count, parts);
 }
