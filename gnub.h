@@ -158,13 +158,16 @@ bool _gnub__compare_files(const char* file0, const char* file1)
 	FILE* file0_ds = fopen(file0, "rb");
 	FILE* file1_ds = fopen(file1, "rb");
 
-	char c0 = fgetc(file0_ds);
-	char c1 = fgetc(file1_ds);
+	int c0 = fgetc(file0_ds);
+	int c1 = fgetc(file1_ds);
 
 	bool is_eq = false;
 
 	while (c0 != EOF && c1 != EOF) {
 		if (c0 != c1) goto done;	
+
+		c0 = fgetc(file0_ds);
+		c1 = fgetc(file1_ds);
 	}
 
 	if (c0 == EOF && c1 == EOF) {
@@ -192,6 +195,8 @@ int gnub__execute_commands(struct gnub__cmd_arr* cmds)
 
 		cmd = cmd->next;
 	}
+
+	return 0;
 }
 
 void gnub__free_commands(struct gnub__cmd_arr* cmds)
