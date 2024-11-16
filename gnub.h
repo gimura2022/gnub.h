@@ -228,6 +228,8 @@ bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, ch
 	if (gnub__execute_commands(arr) != 0) return false;
 	if (_gnub__compare_files(output_file, argv[0])) return true;
 
+	gnub__free_commands(arr);
+
 	remove(argv[0]);
 	rename(output_file, argv[0]);
 
