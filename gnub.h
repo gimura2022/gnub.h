@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define GNUB_MAX_CMD_PART_LENGHT 32
+#define GNUB_MAX_CMD_PART_LENGHT 1024
 #define GNUB_MAX_CMD_LEN 1024
 
 #define array_lenght(x) sizeof(x) / sizeof(x[0])
@@ -45,6 +45,11 @@ void _gnub__free_command(struct _gnub__cmd* cmd);
 void gnub__execute_commands(struct gnub__cmd_arr* cmds);
 void gnub__free_commands(struct gnub__cmd_arr* cmds);
 
+void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const char* cflags,
+		const char* cppflags, const char* source, const char* output);
+void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
+		const char* output);
+
 #define _gnub__parts_command(x, arr, ...) ({ const char* __parts[] = {__VA_ARGS__}; \
 		x(arr, array_lenght(__parts), __parts); })
 
@@ -65,11 +70,8 @@ void gnub__free_commands(struct gnub__cmd_arr* cmds);
 
 void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const char** parts)
 {
-	cmd->start = (struct _gnub__cmd_part*) malloc(sizeof(struct _gnub__cmd_part));
-	cmd->end   = cmd->start;
-
 	for (size_t i = 0; i < count; i++) {
-		memcpy(cmd->end, parts[i], strlen(parts[i]));
+		memcpy(cmd->end->str, parts[i], strlen(parts[i]));
 
 		cmd->end->next = (struct _gnub__cmd_part*) malloc(sizeof(struct _gnub__cmd_part));
 		cmd->end = cmd->end->next;
@@ -91,6 +93,9 @@ void _gnub__append_command(struct gnub__cmd_arr* arr, const size_t count, const 
 		arr->end->next = (struct _gnub__cmd*) malloc(sizeof(struct _gnub__cmd));
 		arr->end       = arr->end->next;
 	}
+
+	arr->end->start = (struct _gnub__cmd_part*) malloc(sizeof(struct _gnub__cmd_part));
+	arr->end->end   = arr->end->start;
 
 	_gnub__append_to_command(arr->end, count, parts);
 }
@@ -159,6 +164,18 @@ void gnub__free_commands(struct gnub__cmd_arr* cmds)
 		_gnub__free_command(cmd);
 		cmd = next;
 	}
+}
+
+void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const char* cflags,
+		const char* cppflags, const char* source, const char* output)
+{
+	gnub__append_command(arr, cc, cflags, cppflags, "-c", "-o", output, source);
+}
+
+void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
+		const char* output)
+{
+	gnub__append_command(arr, ld, ldflags, "-o", output, objects);
 }
 
 #endif
