@@ -8,10 +8,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <string.h>
 
 #define GNUB_MAX_CMD_PART_LENGHT 1024
 #define GNUB_MAX_CMD_LEN 1024
+#define GNUB_MAX_FILE_NAME 64
+
+#define GNUB_FIND_C_FILES_MAX_FILES 64
 
 #define array_lenght(x) sizeof(x) / sizeof(x[0])
 
@@ -53,6 +57,8 @@ void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const cha
 		const char* cppflags, const char* source, const char* output);
 void gnub__compile_c(struct gnub__cmd_arr* arr, const char* cc, const char* cflags, const char* cppflags,
 		const char* ldflags, const char* source, const char* output);
+bool gnub__find_c_files(const char* path, char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME],
+		size_t* count);
 void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
 		const char* output);
 
@@ -249,6 +255,39 @@ bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, ch
 
 	execv(argv[0], argv);
 	exit(0);
+}
+
+bool gnub__find_c_files(const char* path, char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME],
+		size_t* count)
+{
+	DIR* dir = opendir(path);
+	struct dirent* entry;
+	size_t i = 0;
+
+	if (dir == NULL) return false;	
+
+	while ((entry = readdir(dir)) != NULL) {
+		char file_name[64] = {0};
+		strcat(file_name, path);
+		strcat(file_name, entry->d_name);
+
+		if (entry->d_type == DT_REG &&
+				strcmp(file_name + strlen(file_name) - 2, ".c") == 0) {
+			char output_file[64] = {0};
+			strcat(output_file, file_name);
+			strcat(output_file, ".o");
+
+			strcpy(output[i][0], file_name);
+			strcpy(output[i][1], output_file);
+			i++;
+		}
+	}
+
+	*count = i;
+
+	closedir(dir);
+
+	return true;
 }
 
 #endif
