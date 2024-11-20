@@ -41,12 +41,6 @@ struct gnub__cmd_arr {
 void _gnub__append_command(struct gnub__cmd_arr* arr, const size_t count, const char** parts);
 void _gnub__append_parts_to_last(struct gnub__cmd_arr* arr, const size_t count, const char** parts);
 void _gnub__append_parts_by_index(struct gnub__cmd_arr* arr, const size_t count, const char** parts);
-void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const char** parts);
-
-int _gnub__execute_command(struct _gnub__cmd* cmd);
-void _gnub__free_command(struct _gnub__cmd* cmd);
-
-bool _gnub__compare_files(const char* file0, const char* file1);
 
 /* public functions */
 
@@ -81,12 +75,11 @@ bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, ch
 
 /* implementation part */
 
-#ifndef _gnub_impl
-#define _gnub_impl
+#ifdef gnub_impl
 
 /* private functions */
 
-void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const char** parts)
+static void _gnub__append_to_command(struct _gnub__cmd* cmd, const size_t count, const char** parts)
 {
 	for (size_t i = 0; i < count; i++) {
 		memcpy(cmd->end->str, parts[i], strlen(parts[i]));
@@ -124,7 +117,7 @@ void _gnub__append_command(struct gnub__cmd_arr* arr, const size_t count, const 
 	_gnub__append_to_command(arr->end, count, parts);
 }
 
-int _gnub__execute_command(struct _gnub__cmd* cmd)
+static int _gnub__execute_command(struct _gnub__cmd* cmd)
 {
 	char out_command[GNUB_MAX_CMD_PART_LENGHT];
 	memset(out_command, '\0', sizeof(out_command));
@@ -140,7 +133,7 @@ int _gnub__execute_command(struct _gnub__cmd* cmd)
 	return system(out_command);
 }
 
-void _gnub__free_command(struct _gnub__cmd* cmd)
+static void _gnub__free_command(struct _gnub__cmd* cmd)
 {
 	struct _gnub__cmd_part* part = cmd->start;
 	while (part != NULL) {
@@ -169,7 +162,7 @@ void _gnub__append_parts_by_index(struct gnub__cmd_arr* arr, const size_t count,
 	_gnub__append_to_command(cmd, count, parts);
 }
 
-bool _gnub__compare_files(const char* file0, const char* file1)
+static bool _gnub__compare_files(const char* file0, const char* file1)
 {
 	FILE* file0_ds = fopen(file0, "rb");
 	FILE* file1_ds = fopen(file1, "rb");
