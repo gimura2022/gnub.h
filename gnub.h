@@ -225,7 +225,8 @@ bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, ch
 {
 	if (strcmp(output_file, argv[0]) == 0) return false;
 	if (gnub__execute_commands(arr) != 0) return false;
-	if (_gnub__compare_files(output_file, argv[0])) {
+	if (getenv("GNUB_NO_RECOMP") == NULL) {
+		printf("Recompiling\n");
 		remove(output_file);
 		return true;
 	}
@@ -235,7 +236,11 @@ bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, ch
 	remove(argv[0]);
 	rename(output_file, argv[0]);
 
-	execv(argv[0], argv);
+	const char* env[] = {
+		"GNUB_NO_RECOMP=1"
+	};
+
+	execve(argv[0], argv, (char *const*) env);
 	exit(0);
 }
 
