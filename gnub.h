@@ -77,7 +77,7 @@ bool gnub__compile_subproject(const char* path);
 
 /* implementation part */
 
-#ifndef gnub_impl
+#ifdef gnub_impl
 
 /* private functions */
 
