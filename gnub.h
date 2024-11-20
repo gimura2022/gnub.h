@@ -3,6 +3,7 @@
 #ifndef _gnub_h
 #define _gnub_h
 
+#include <cstdio>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -77,7 +78,7 @@ bool gnub__compile_subproject(const char* path);
 
 /* implementation part */
 
-#ifdef gnub_impl
+#ifndef gnub_impl
 
 /* private functions */
 
@@ -328,6 +329,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 bool gnub__compile_subproject(const char* path)
 {
 	char path_to_gnub[GNUB_MAX_FILE_NAME] = {0};
+	strcat(path_to_gnub, "./");
 	strcat(path_to_gnub, path);
 	strcat(path_to_gnub, "/gnub");
 
@@ -344,7 +346,7 @@ bool gnub__compile_subproject(const char* path)
 		gnub__free_commands(&arr);
 	}
 
-	execv(path_to_gnub, NULL);
+	system(path_to_gnub);
 }
 
 #endif
