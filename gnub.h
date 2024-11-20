@@ -322,7 +322,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count)
 {
 	gnub__create_shared_lib(arr, cc, name, output, count);
-	gnub__create_shared_lib(arr, ar, name, output, count);
+	gnub__create_static_lib(arr, ar, name, output, count);
 }
 
 bool gnub__compile_subproject(const char* path)
