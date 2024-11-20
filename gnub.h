@@ -132,6 +132,7 @@ static int _gnub__execute_command(struct _gnub__cmd* cmd)
 		part = part->next;
 	}
 
+	printf("%s\n", out_command);
 	return system(out_command);
 }
 
