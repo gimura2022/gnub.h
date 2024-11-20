@@ -339,7 +339,7 @@ bool gnub__compile_subproject(const char* path)
 		strcat(path_to_gnub_c, ".c");
 
 		struct gnub__cmd_arr arr = {0};
-		gnub__append_command(&arr, "cc", "-o gnub", path_to_gnub);
+		gnub__append_command(&arr, "cc", "-o", path_to_gnub, path_to_gnub_c);
 
 		gnub__execute_commands(&arr);
 		gnub__free_commands(&arr);
