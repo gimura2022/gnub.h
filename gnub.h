@@ -66,7 +66,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
 
 bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
-bool gnub__compile_subproject(const char* path);
+bool gnub__compile_subproject(const char* path, char* argv[]);
 
 #define _gnub__parts_command(x, arr, ...) ({ const char* __parts[] = {__VA_ARGS__}; \
 		x(arr, array_lenght(__parts), __parts); })
@@ -239,11 +239,7 @@ bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, ch
 	remove(argv[0]);
 	rename(output_file, argv[0]);
 
-	const char* env[] = {
-		"GNUB_NO_RECOMP=1"
-	};
-
-	execve(argv[0], argv, (char *const*) env);
+	execv(argv[0], argv);
 	exit(0);
 }
 
@@ -337,7 +333,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 	gnub__create_static_lib(arr, ar, name, ldflags, output, count);
 }
 
-bool gnub__compile_subproject(const char* path)
+bool gnub__compile_subproject(const char* path, char* argv[])
 {
 	char path_to_gnub[GNUB_MAX_FILE_NAME] = {0};
 	strcat(path_to_gnub, "./");
@@ -357,7 +353,12 @@ bool gnub__compile_subproject(const char* path)
 		gnub__free_commands(&arr);
 	}
 
-	system(path_to_gnub);
+	char old_dir[GNUB_MAX_FILE_NAME] = {0};
+	getcwd(old_dir, sizeof(old_dir));
+
+	chdir(path);
+	system("./gnub");
+	chdir(old_dir);
 }
 
 #endif
