@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include <string.h>
 
 #define GNUB_MAX_CMD_PART_LENGHT 1024
@@ -61,6 +62,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
 
 bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
+bool gnub__compile_subproject(const char* path);
 
 #define _gnub__parts_command(x, arr, ...) ({ const char* __parts[] = {__VA_ARGS__}; \
 		x(arr, array_lenght(__parts), __parts); })
@@ -278,7 +280,7 @@ void gnub__create_executable(struct gnub__cmd_arr* arr, const char* ld, const ch
 	}
 
 	gnub__append_command(arr, ld, "-o", name);
-	_gnub__append_parts_to_last(arr, count, files);
+	_gnub__append_parts_to_last(arr, count, (const char**) files);
 }
 
 void gnub__create_static_lib(struct gnub__cmd_arr* arr, const char* ar, const char* name,
@@ -295,7 +297,7 @@ void gnub__create_static_lib(struct gnub__cmd_arr* arr, const char* ar, const ch
 	strcat(lib_name, ".a");
 
 	gnub__append_command(arr, ar, "rcs", lib_name);
-	_gnub__append_parts_to_last(arr, count, files);
+	_gnub__append_parts_to_last(arr, count, (const char**) files);
 }
 
 void gnub__create_shared_lib(struct gnub__cmd_arr* arr, const char* cc, const char* name,
@@ -312,7 +314,7 @@ void gnub__create_shared_lib(struct gnub__cmd_arr* arr, const char* cc, const ch
 	strcat(lib_name, ".so");
 
 	gnub__append_command(arr, cc, "-shared", "-o", lib_name);
-	_gnub__append_parts_to_last(arr, count, files);
+	_gnub__append_parts_to_last(arr, count, (const char**) files);
 }
 
 void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc, const char* name,
@@ -320,6 +322,28 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 {
 	gnub__create_shared_lib(arr, cc, name, output, count);
 	gnub__create_shared_lib(arr, ar, name, output, count);
+}
+
+bool gnub__compile_subproject(const char* path)
+{
+	char path_to_gnub[GNUB_MAX_FILE_NAME] = {0};
+	strcat(path_to_gnub, path);
+	strcat(path_to_gnub, "/gnub");
+
+	struct stat tmp;
+	if (stat(path_to_gnub, &tmp) == -1) {
+		char path_to_gnub_c[GNUB_MAX_FILE_NAME] = {0};
+		strcpy(path_to_gnub_c, path_to_gnub);
+		strcat(path_to_gnub_c, ".c");
+
+		struct gnub__cmd_arr arr = {0};
+		gnub__append_command(&arr, "cc", "-o gnub", path_to_gnub);
+
+		gnub__execute_commands(&arr);
+		gnub__free_commands(&arr);
+	}
+
+	execv(path_to_gnub, NULL);
 }
 
 #endif
