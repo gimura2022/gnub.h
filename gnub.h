@@ -53,14 +53,18 @@ bool _gnub__compare_files(const char* file0, const char* file1);
 int gnub__execute_commands(struct gnub__cmd_arr* cmds);
 void gnub__free_commands(struct gnub__cmd_arr* cmds);
 
-void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const char* cflags,
-		const char* cppflags, const char* source, const char* output);
-void gnub__compile_c(struct gnub__cmd_arr* arr, const char* cc, const char* cflags, const char* cppflags,
-		const char* ldflags, const char* source, const char* output);
 bool gnub__find_c_files(const char* path, char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME],
 		size_t* count);
-void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
-		const char* output);
+
+void gnub__create_executable(struct gnub__cmd_arr* arr, const char* ld, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
+
+void gnub__create_static_lib(struct gnub__cmd_arr* arr, const char* ar, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
+void gnub__create_shared_lib(struct gnub__cmd_arr* arr, const char* cc, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
+void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
 
 bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
 
@@ -221,24 +225,6 @@ void gnub__free_commands(struct gnub__cmd_arr* cmds)
 	}
 }
 
-void gnub__compile_c_object(struct gnub__cmd_arr* arr, const char* cc, const char* cflags,
-		const char* cppflags, const char* source, const char* output)
-{
-	gnub__append_command(arr, cc, cflags, cppflags, "-c", "-o", output, source);
-}
-
-void gnub__compile_c(struct gnub__cmd_arr* arr, const char* cc, const char* cflags, const char* cppflags,
-		const char* ldflags, const char* source, const char* output)
-{
-	gnub__append_command(arr, cc, cflags, cppflags, ldflags, "-o", output, source);
-}
-
-void gnub__link_objects(struct gnub__cmd_arr* arr, const char* ld, const char* objects, const char* ldflags,
-		const char* output)
-{
-	gnub__append_command(arr, ld, ldflags, "-o", output, objects);
-}
-
 bool gnub__recompile_self(struct gnub__cmd_arr* arr, const char* output_file, char* argv[])
 {
 	if (strcmp(output_file, argv[0]) == 0) return false;
@@ -288,6 +274,59 @@ bool gnub__find_c_files(const char* path, char output[GNUB_FIND_C_FILES_MAX_FILE
 	closedir(dir);
 
 	return true;
+}
+
+void gnub__create_executable(struct gnub__cmd_arr* arr, const char* ld, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count)
+{
+	char files[GNUB_FIND_C_FILES_MAX_FILES][GNUB_MAX_FILE_NAME] = {0};
+	for (int i = 0; i < count; i++) {
+		strcpy(files[i], output[i][1]);
+	}
+
+	gnub__append_command(arr, ld, "-o", name);
+	_gnub__append_parts_to_last(arr, count, files);
+}
+
+void gnub__create_static_lib(struct gnub__cmd_arr* arr, const char* ar, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count)
+{
+	char files[GNUB_FIND_C_FILES_MAX_FILES][GNUB_MAX_FILE_NAME];
+	for (int i = 0; i < count; i++) {
+		strcpy(files[i], output[i][1]);
+	}
+
+	char lib_name[GNUB_MAX_FILE_NAME] = {0};
+	strcat(lib_name, "lib");
+	strcat(lib_name, name);
+	strcat(lib_name, ".a");
+
+	gnub__append_command(arr, ar, "rcs", lib_name);
+	_gnub__append_parts_to_last(arr, count, files);
+}
+
+void gnub__create_shared_lib(struct gnub__cmd_arr* arr, const char* cc, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count)
+{
+	char files[GNUB_FIND_C_FILES_MAX_FILES][GNUB_MAX_FILE_NAME];
+	for (int i = 0; i < count; i++) {
+		strcpy(files[i], output[i][1]);
+	}
+	
+	char lib_name[GNUB_MAX_FILE_NAME] = {0};
+	strcat(lib_name, "lib");
+	strcat(lib_name, name);
+	strcat(lib_name, ".so");
+
+	gnub__append_command(arr, cc, "-shared", "-o", lib_name);
+	_gnub__append_parts_to_last(arr, count, files);
+}
+
+void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc, const char* name,
+		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count)
+{
+	gnub__create_shared_lib(arr, cc, name, output, count);
+	gnub__create_shared_lib(arr, ar, name, output, count);
 }
 
 #endif
