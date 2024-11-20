@@ -286,7 +286,7 @@ void gnub__create_executable(struct gnub__cmd_arr* arr, const char* ld, const ch
 		strcat(files_str, " ");
 	}
 
-	gnub__append_command(arr, ld, "-o", name, ldflags, files_str);
+	gnub__append_command(arr, ld, "-o", name, files_str, ldflags);
 }
 
 void gnub__create_static_lib(struct gnub__cmd_arr* arr, const char* ar, const char* name,
@@ -322,7 +322,7 @@ void gnub__create_shared_lib(struct gnub__cmd_arr* arr, const char* cc, const ch
 	strcat(lib_name, name);
 	strcat(lib_name, ".so");
 
-	gnub__append_command(arr, cc, "-shared", "-o", lib_name, ldflags, files_str);
+	gnub__append_command(arr, cc, "-shared", "-o", lib_name, files_str, ldflags);
 }
 
 void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc, const char* name,

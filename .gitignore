@@ -1,2 +1,8 @@
 gnub
 gnub.new
+
+*.80-86
+*.o
+
+*.a
+*.so
