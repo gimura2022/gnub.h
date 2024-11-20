@@ -3,7 +3,6 @@
 #ifndef _gnub_h
 #define _gnub_h
 
-#include <cstdio>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -78,7 +77,7 @@ bool gnub__compile_subproject(const char* path);
 
 /* implementation part */
 
-#ifndef gnub_impl
+#ifdef gnub_impl
 
 /* private functions */
 
