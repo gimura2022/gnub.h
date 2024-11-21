@@ -65,6 +65,9 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 		const char* ldflags,
 		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
 
+void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* prefix, int type,
+		const char* include);
+
 bool gnub__recompile_self_with_build_arr(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
 bool gnub__recompile_self(char* argv[]);
 bool gnub__compile_subproject(const char* path, char* argv[]);
@@ -376,6 +379,48 @@ bool gnub__compile_subproject(const char* path, char* argv[])
 	chdir(path);
 	system("./gnub");
 	chdir(old_dir);
+}
+
+void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* prefix, int type,
+		const char* include)
+{
+	char libpath[GNUB_MAX_FILE_NAME] = {0};
+	strcat(libpath, prefix);
+	strcat(libpath, "/lib");
+
+	char includepath[GNUB_MAX_FILE_NAME] = {0};
+	strcat(includepath, prefix);
+	strcat(includepath, "/include");
+
+	char all_includefiles[GNUB_MAX_FILE_NAME] = {0};
+	strcat(all_includefiles, include);
+	strcat(all_includefiles, "/*");
+
+	char libname[GNUB_MAX_FILE_NAME] = {0};
+	strcat(libname, "lib");
+	strcat(libname, name);
+
+	char libname_static[GNUB_MAX_FILE_NAME] = {0};
+	strcat(libname_static, libname);
+	strcat(libname_static, ".a");
+
+	char libname_shared[GNUB_MAX_FILE_NAME] = {0};
+	strcat(libname_shared, libname);
+	strcat(libname_shared, ".so");
+
+	gnub__append_command(arr, "install -d", libpath);
+	switch (type) {
+	case 0:	
+	case 1:
+		gnub__append_command(arr, "install -m 644", libname_static, libpath);
+		if (type != 0) break;
+
+	case 2:
+		gnub__append_command(arr, "install -m 755", libname_shared, libpath);
+	}
+
+	gnub__append_command(arr, "install -d", includepath);
+	gnub__append_command(arr, "install -m 644", all_includefiles, includepath);
 }
 
 #endif
