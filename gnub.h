@@ -66,6 +66,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
 
 bool gnub__recompile_self_with_build_arr(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
+bool gnub__recompile_self(char* argv[]);
 bool gnub__compile_subproject(const char* path, char* argv[]);
 
 #define _gnub__parts_command(x, arr, ...) ({ const char* __parts[] = {__VA_ARGS__}; \
@@ -241,6 +242,22 @@ bool gnub__recompile_self_with_build_arr(struct gnub__cmd_arr* arr, const char* 
 
 	execv(argv[0], argv);
 	exit(0);
+}
+
+bool gnub__recompile_self(char* argv[])
+{
+	struct gnub__cmd_arr cmds = {0};
+
+	char output_file[32] = {0};
+	strcpy(output_file, argv[0]);
+	strcat(output_file, ".new");
+
+	gnub__append_command(&cmds, "CC", "-o", output_file, "gnub.c");
+
+	bool result = gnub__recompile_self_with_build_arr(&cmds, output_file, argv);
+	gnub__free_commands(&cmds);
+
+	return result;
 }
 
 bool gnub__find_c_files(const char* path, char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME],
