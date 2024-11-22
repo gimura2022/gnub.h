@@ -269,7 +269,7 @@ bool gnub__recompile_self(char* argv[])
 	strcpy(output_file, argv[0]);
 	strcat(output_file, ".new");
 
-	gnub__append_command(&cmds, "CC", "-o", output_file, "gnub.c");
+	gnub__append_command(&cmds, "cc", "-o", output_file, "gnub.c");
 
 	bool result = gnub__recompile_self_with_build_arr(&cmds, output_file, argv);
 	gnub__free_commands(&cmds);
