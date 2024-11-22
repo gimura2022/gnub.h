@@ -82,7 +82,7 @@ bool gnub__recompile_self(char* argv[]);
 bool gnub__compile_subproject(const char* path, char* argv[]);
 
 void gnub__add_target(const char* name, gnub__target_hendler_t handler);
-void gnub__run_targets(int argc, char* argv[]);
+void gnub__run_targets(int argc, char* argv[], const char* defaults_target[], const size_t count);
 
 const char* gnub__get_env_variable(const char* name, const char* or_default);
 
@@ -454,8 +454,14 @@ static void _gnub__run_target(const char* name)
 	}
 }
 
-void gnub__run_targets(int argc, char* argv[])
+void gnub__run_targets(int argc, char* argv[], const char* defaults_target[], const size_t count)
 {
+	if (argc == 1) {
+		for (int i = 0; i < count; i++) {
+			_gnub__run_target(defaults_target[i]);
+		}
+	}
+
 	for (int i = 1; i < argc; i++) {
 		_gnub__run_target(argv[i]);	
 	}
