@@ -97,7 +97,7 @@ void gnub__run_targets(int argc, char* argv[]);
 
 /* implementation part */
 
-#ifndef gnub_impl
+#ifdef gnub_impl
 
 /* private functions */
 
