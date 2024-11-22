@@ -445,6 +445,8 @@ void gnub__add_target(const char* name, gnub__target_hendler_t handler)
 	struct _gnub__target target = {0};
 	strcpy(target.name, name);	
 	target.handler = handler;
+
+	targets[targets_count++] = target;
 }
 
 static void _gnub__run_target(const char* name)
