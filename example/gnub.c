@@ -20,6 +20,12 @@ static const char* ldflags_libgoodbye = "-L./goodbye -l:libgoodbye.a";
 static char* cc = "cc";
 static char* ar = "ar";
 
+static char cflags_out[512];
+static char ldflags_out[512];
+static char cppflags_out[512];
+
+static char*** argv_ptr;
+
 static void die(const char* msg, ...)
 {
 	va_list args;
@@ -32,38 +38,19 @@ static void die(const char* msg, ...)
 	exit(-1);
 }
 
-static void recompile_self(char* argv[])
+static void compile(void)
 {
-	struct gnub__cmd_arr cmds = {0};
+	strcat(cflags_out, cflags);
 
-	char output_file[32] = {0};
-	strcpy(output_file, argv[0]);
-	strcat(output_file, ".new");
+	strcat(ldflags_out, ldflags_libgoodbye);
+	strcat(ldflags_out, ldflags_libhello);
 
-	gnub__append_command(&cmds, cc, cflags_deb, "-o", output_file, "gnub.c");
+	strcat(cppflags_out, cppflags);
+	strcat(cppflags_out, cppflags_libgoodbye);
+	strcat(cppflags_out, cppflags_libhello);
 
-	if (!gnub__recompile_self(&cmds, output_file, argv)) 
-		die("Error: can't recompile build script\n");
-
-	gnub__free_commands(&cmds);
-}
-
-int main(int argc, char* argv[])
-{
-	cc = getenv("CC") == NULL ? cc : getenv("CC");
-	ar = getenv("AR") == NULL ? ar : getenv("AR");
-
-	recompile_self(argv);
-
-	gnub__compile_subproject("hello", argv);
-	gnub__compile_subproject("goodbye", argv);
-
-	const char* cflags_add = cflags_rel;
-	if (argc == 2) {
-		if (strcpy(argv[1], "release") == 0) cflags_add = cflags_rel;
-		else if (strcpy(argv[1], "debug") == 0) cflags_add = cflags_deb;
-		else die("Error: unrecognized option %s\n", argv[1]);
-	}
+	gnub__compile_subproject("hello", *argv_ptr);
+	gnub__compile_subproject("goodbye", *argv_ptr);
 
 	struct gnub__cmd_arr compile_commands = {0};
 
@@ -72,20 +59,42 @@ int main(int argc, char* argv[])
 	gnub__find_c_files("src/", objects, &count);
 
 	for (size_t i = 0; i < count; i++) {
-		gnub__append_command(&compile_commands, cc, cflags, cflags_add, cppflags_libhello,
-				cppflags_libgoodbye, cppflags, "-c", "-o", objects[i][1], objects[i][0],
-				ldflags_libhello, ldflags_libgoodbye);
+		gnub__append_command(&compile_commands, cc, cflags_out, cppflags_out, "-c", "-o",
+				objects[i][1], objects[i][0], ldflags_out);
 	}
 
-	char ldflags[1024] = {0};
-	strcat(ldflags, ldflags_libgoodbye);
-	strcat(ldflags, " ");
-	strcat(ldflags, ldflags_libhello);
-
-	gnub__create_executable(&compile_commands, cc, "example.80-86", ldflags, objects, count);
+	gnub__create_executable(&compile_commands, cc, "example.x80-86", ldflags_out, objects, count);
 
 	gnub__execute_commands(&compile_commands);
 	gnub__free_commands(&compile_commands);
+}
+
+static void debug(void)
+{
+	strcpy(cflags_out, cflags_deb);
+	compile();
+}
+
+static void release(void)
+{
+	strcpy(cflags_out, cflags_rel);
+	compile();
+}
+
+int main(int argc, char* argv[])
+{
+	argv_ptr = &argv;
+
+	cc = gnub__get_env_variable("CC", cc);
+	ar = gnub__get_env_variable("AR", ar);
+
+	gnub__recompile_self(argv);
+
+	gnub__add_target("release", release);
+	gnub__add_target("debug", debug);
+
+	const char* default_targets[] = { "release" };
+	gnub__run_targets(argc, argv, default_targets, array_lenght(default_targets));
 
 	return 0;
 }
