@@ -15,6 +15,8 @@
 #define GNUB_MAX_CMD_PART_LENGHT 1024
 #define GNUB_MAX_CMD_LEN 1024
 #define GNUB_MAX_FILE_NAME 64
+#define GNUB_MAX_TARGET_NAME 64
+#define GNUB_MAX_TARGETS 32
 
 #define GNUB_FIND_C_FILES_MAX_FILES 64
 
@@ -35,6 +37,13 @@ struct _gnub__cmd {
 struct gnub__cmd_arr {
 	struct _gnub__cmd* start;
 	struct _gnub__cmd* end;
+};
+
+typedef void (*gnub__target_hendler_t)(void);
+
+struct _gnub__target {
+	char name[GNUB_MAX_TARGET_NAME];
+	gnub__target_hendler_t handler;
 };
 
 /* private functions */
@@ -72,6 +81,9 @@ bool gnub__recompile_self_with_build_arr(struct gnub__cmd_arr* arr, const char* 
 bool gnub__recompile_self(char* argv[]);
 bool gnub__compile_subproject(const char* path, char* argv[]);
 
+void gnub__add_target(const char* name, gnub__target_hendler_t handler);
+void gnub__run_targets(int argc, char* argv[]);
+
 #define _gnub__parts_command(x, arr, ...) ({ const char* __parts[] = {__VA_ARGS__}; \
 		x(arr, array_lenght(__parts), __parts); })
 
@@ -85,7 +97,7 @@ bool gnub__compile_subproject(const char* path, char* argv[]);
 
 /* implementation part */
 
-#ifdef gnub_impl
+#ifndef gnub_impl
 
 /* private functions */
 
@@ -421,6 +433,30 @@ void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* 
 
 	gnub__append_command(arr, "install -d", includepath);
 	gnub__append_command(arr, "install -m 644", all_includefiles, includepath);
+}
+
+static struct _gnub__target targets[GNUB_MAX_TARGETS];
+static size_t targets_count = 0;
+
+void gnub__add_target(const char* name, gnub__target_hendler_t handler)
+{
+	struct _gnub__target target = {0};
+	strcpy(target.name, name);	
+	target.handler = handler;
+}
+
+static void _gnub__run_target(const char* name)
+{
+	for (int i = 0; i < targets_count; i++) {
+		if (strcmp(targets[i].name, name) == 0) targets[i].handler();
+	}
+}
+
+void gnub__run_targets(int argc, char* argv[])
+{
+	for (int i = 1; i < argc; i++) {
+		_gnub__run_target(argv[i]);	
+	}
 }
 
 #endif
