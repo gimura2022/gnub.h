@@ -3,6 +3,7 @@
 #ifndef _gnub_h
 #define _gnub_h
 
+#include <cstdlib>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -451,8 +452,17 @@ void gnub__add_target(const char* name, gnub__target_hendler_t handler)
 
 static void _gnub__run_target(const char* name)
 {
+	bool found = false;
 	for (int i = 0; i < targets_count; i++) {
-		if (strcmp(targets[i].name, name) == 0) targets[i].handler();
+		if (strcmp(targets[i].name, name) == 0) {
+			targets[i].handler();
+			found = true;
+		}
+	}
+
+	if (!found) {
+		fprintf(stderr, "Target %s not found\n", name);
+		exit(-1);
 	}
 }
 
@@ -465,7 +475,7 @@ void gnub__run_targets(int argc, char* argv[], const char* defaults_target[], co
 	}
 
 	for (int i = 1; i < argc; i++) {
-		_gnub__run_target(argv[i]);	
+		_gnub__run_target(argv[i]);
 	}
 }
 
