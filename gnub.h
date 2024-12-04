@@ -221,13 +221,22 @@ done:
 int gnub__execute_commands(struct gnub__cmd_arr* cmds)
 {
 	struct _gnub__cmd* cmd = cmds->start;
+
+	int count, i;
+	struct _gnub__cmd* cur_cmd = cmd;
+	for (count = 0; cur_cmd != NULL; count++, (cur_cmd = cur_cmd->next));
+
+	i = 0;
 	while (cmd != NULL) {
+		printf("[executing %i/%i] ", i, count);	
+
 		int code = _gnub__execute_command(cmd);
 		if (code != 0) {
 			return code;
 		}
 
 		cmd = cmd->next;
+		i++;
 	}
 
 	return 0;
@@ -369,6 +378,8 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 
 bool gnub__compile_subproject(const char* path, char* argv[])
 {
+	printf("compiling subproject %s\n", path);
+
 	char path_to_gnub[GNUB_MAX_FILE_NAME] = {0};
 	strcat(path_to_gnub, "./");
 	strcat(path_to_gnub, path);
@@ -393,6 +404,8 @@ bool gnub__compile_subproject(const char* path, char* argv[])
 	chdir(path);
 	system("./gnub");
 	chdir(old_dir);
+
+	printf("\nend compiling subproject %s\n", path);
 }
 
 void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* prefix, int type,
