@@ -76,7 +76,7 @@ void gnub__create_lib(struct gnub__cmd_arr* arr, const char* ar, const char* cc,
 		char output[GNUB_FIND_C_FILES_MAX_FILES][2][GNUB_MAX_FILE_NAME], const size_t count);
 
 void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* prefix, int type,
-		const char* include);
+		const char* include, const char* path);
 
 bool gnub__recompile_self_with_build_arr(struct gnub__cmd_arr* arr, const char* output_file, char* argv[]);
 bool gnub__recompile_self(char* argv[]);
@@ -100,7 +100,7 @@ char* gnub__get_env_variable(char* name, char* or_default);
 
 /* implementation part */
 
-#ifdef gnub_impl
+#ifndef gnub_impl
 
 /* private functions */
 
@@ -410,7 +410,7 @@ bool gnub__compile_subproject(const char* path, char* argv[])
 }
 
 void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* prefix, int type,
-		const char* include)
+		const char* include, const char* path)
 {
 	char libpath[GNUB_MAX_FILE_NAME] = {0};
 	strcat(libpath, prefix);
@@ -418,7 +418,8 @@ void gnub__install_lib(struct gnub__cmd_arr* arr, const char* name, const char* 
 
 	char includepath[GNUB_MAX_FILE_NAME] = {0};
 	strcat(includepath, prefix);
-	strcat(includepath, "/include");
+	strcat(includepath, "/include/");
+	strcat(includepath, path);
 
 	char all_includefiles[GNUB_MAX_FILE_NAME] = {0};
 	strcat(all_includefiles, include);
