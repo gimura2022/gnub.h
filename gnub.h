@@ -100,7 +100,7 @@ char* gnub__get_env_variable(char* name, char* or_default);
 
 /* implementation part */
 
-#ifndef gnub_impl
+#ifdef gnub_impl
 
 /* private functions */
 
