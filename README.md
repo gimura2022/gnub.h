@@ -1,4 +1,5 @@
-# gnub.h
+# gnub.h [![CodeFactor](https://www.codefactor.io/repository/github/gimura2022/gnub.h/badge)](https://www.codefactor.io/repository/github/gimura2022/gnub.h)
+
 Small build system like nub.h
 
 ## Quick start
